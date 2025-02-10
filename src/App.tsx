@@ -3,10 +3,19 @@ import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
 import EmojiPicker from "./components/EmojiPicker";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import useToastNotification from "./components/ToastifyNotification";
 
 function App() {
   const [count, setCount] = useState(0);
   const [selectedEmoji, setSelectedEmoji] = useState<string | null>(null);
+  const { showToast } = useToastNotification();
+
+  const handleEmojiSelect = (emoji: string) => {
+    setSelectedEmoji(emoji);
+    showToast(`You selected: ${emoji}`);
+  };
 
   return (
     <>
@@ -25,11 +34,12 @@ function App() {
         </button>
       </div>
 
-      {/* Emoji Picker Component */}
-      <EmojiPicker onSelect={(emoji) => setSelectedEmoji(emoji)} />
+      <EmojiPicker onSelect={handleEmojiSelect} />
 
-      {/* Selected Emoji Display */}
       {selectedEmoji && <h2 className="text-2xl mt-4">Selected: {selectedEmoji}</h2>}
+
+      {/* Toast Container to display notifications */}
+      <ToastContainer />
     </>
   );
 }
