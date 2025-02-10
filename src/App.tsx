@@ -37,8 +37,6 @@ function App() {
       <EmojiPicker onSelect={handleEmojiSelect} />
 
       {selectedEmoji && <h2 className="text-2xl mt-4">Selected: {selectedEmoji}</h2>}
-
-      {/* Toast Container to display notifications */}
       <ToastContainer />
     </>
   );

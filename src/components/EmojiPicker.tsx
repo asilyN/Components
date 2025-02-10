@@ -10,10 +10,10 @@ export default function EmojiPicker({ onSelect }: EmojiPickerProps) {
   const [showPicker, setShowPicker] = useState(false);
 
   return (
-    <div className="relative text-center mt-10"> {/* Increased margin-top for better spacing */}
+    <div className="relative text-center mt-10">
       <button
         onClick={() => setShowPicker(!showPicker)}
-        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 mb-6" // Adjusted spacing below the button
+        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 mb-6"
       >
         Pick Emoji
       </button>
