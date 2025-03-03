@@ -1,43 +1,56 @@
-import { useState, useEffect } from "react";
-import { supabase } from "../../server/supabaseclient";
-import useToastNotification from "./ToastifyNotification"; // Import the custom toast hook
+import React, { useState, useEffect } from "react";
+import useToastNotification from "./ToastifyNotification"; // Import custom toast hook
+
+const API_URL = "http://localhost:3000/api/emojis"; // Adjust if deployed
 
 const emojis = ["😀", "😂", "😍", "😎", "😭", "🤔", "🔥", "👍", "🎉", "🌟"];
 
-export default function EmojiPicker() {
+interface EmojiPickerProps {
+  onSelect: (emoji: string) => void;
+}
+
+export default function EmojiPicker({ onSelect }: EmojiPickerProps) {
   const [showPicker, setShowPicker] = useState(false);
   const [savedEmojis, setSavedEmojis] = useState<string[]>([]);
-  const { showToast } = useToastNotification(); // Use the toast notification hook
+  const { showToast } = useToastNotification();
 
-  // Fetch emojis from Supabase
+  // Fetch emojis from Express API
   useEffect(() => {
     const fetchEmojis = async () => {
-      const { data, error } = await supabase
-        .from("emoji")
-        .select("chosen_emoji")
-        .order("created_at", { ascending: false });
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        console.log(data);
 
-      if (error) {
+        if (!response.ok) throw new Error(data.error);
+        setSavedEmojis(data.map((e: { chosen_emoji: string }) => e.chosen_emoji));
+      } catch (error) {
         console.error("❌ Error fetching emojis:", error);
-        showToast("Error fetching emojis ❌"); // Show toast on fetch error
-      } else {
-        setSavedEmojis(data.map((e) => e.chosen_emoji));
+        showToast("Error fetching emojis ❌");
       }
     };
+
     fetchEmojis();
   }, []);
 
-  // Save emoji to Supabase
+  // Save emoji via Express API
   const handleEmojiSelect = async (emoji: string) => {
     setShowPicker(false);
-    const { error } = await supabase.from("emoji").insert([{ chosen_emoji: emoji }]); 
+    try {
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emoji }),
+      });
 
-    if (error) {
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      setSavedEmojis((prev) => [emoji, ...prev]);
+      showToast("Emoji saved successfully! 🎉");
+    } catch (error) {
       console.error("❌ Error saving emoji:", error);
-      showToast("Failed to save emoji ❌"); // Show error toast
-    } else {
-      setSavedEmojis((prev) => [emoji, ...prev]); // Update UI instantly
-      showToast("Emoji saved successfully! 🎉"); // Show success toast
+      showToast("Failed to save emoji ❌");
     }
   };
 
