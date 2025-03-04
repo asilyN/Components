@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import useToastNotification from "./ToastifyNotification"; // Import custom toast hook
+import useToastNotification from "./ToastifyNotification"; 
 
-const API_URL = "http://localhost:3000/api/emojis"; // Adjust if deployed
+const API_URL = "http://localhost:3000/api/emojis";
 
 const emojis = ["😀", "😂", "😍", "😎", "😭", "🤔", "🔥", "👍", "🎉", "🌟"];
 
@@ -14,7 +14,7 @@ export default function EmojiPicker({ onSelect }: EmojiPickerProps) {
   const [savedEmojis, setSavedEmojis] = useState<string[]>([]);
   const { showToast } = useToastNotification();
 
-  // Fetch emojis from Express API
+  
   useEffect(() => {
     const fetchEmojis = async () => {
       try {
@@ -33,7 +33,7 @@ export default function EmojiPicker({ onSelect }: EmojiPickerProps) {
     fetchEmojis();
   }, []);
 
-  // Save emoji via Express API
+  
   const handleEmojiSelect = async (emoji: string) => {
     setShowPicker(false);
     try {
@@ -58,18 +58,18 @@ export default function EmojiPicker({ onSelect }: EmojiPickerProps) {
     <div className="relative text-center mt-10">
       <button
         onClick={() => setShowPicker(!showPicker)}
-        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 mb-6"
+        className="px-4 py-2 bg-blue-500 text-white rounded-lg mb-6 "
       >
         Pick Emoji
       </button>
 
       {showPicker && (
-        <div className="absolute mt-4 bg-white border shadow-md rounded-lg p-3 grid grid-cols-5 gap-2">
+        <div className="absolute mt-4 bg-white border shadow-md rounded-lg p-3 grid grid-cols-5 gap-2 w-60">
           {emojis.map((emoji) => (
             <button
               key={emoji}
               onClick={() => handleEmojiSelect(emoji)}
-              className="text-2xl hover:bg-gray-200 p-2 rounded-lg hover:scale-110 transition-transform"
+              className="text-3xl hover:bg-gray-200 p-1 rounded-lg hover:scale-110 transition-transform -ml-3 -mr-3 "
             >
               {emoji}
             </button>
@@ -77,7 +77,7 @@ export default function EmojiPicker({ onSelect }: EmojiPickerProps) {
         </div>
       )}
 
-      {/* Display saved emojis */}
+      
       <div className="mt-6">
         <h2 className="text-lg font-semibold mb-2">Recently Picked Emojis:</h2>
         <div className="flex gap-2 text-2xl">
