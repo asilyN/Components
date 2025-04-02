@@ -1,16 +1,13 @@
 /** @type {import('jest').Config} */
-const config = {
-    preset: "ts-jest",
-    testEnvironment: "node",
-    transform: {
-      "^.+\\.tsx?$": "ts-jest",
-    },
-    moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-    testMatch: ["**/__tests__/**/*.ts?(x)", "**/?(*.)+(spec|test).ts?(x)"],
-    // If you have specific paths to ignore
-    testPathIgnorePatterns: ["/node_modules/", "/dist/"],
+module.exports = {
+  preset: 'ts-jest',
+  testEnvironment: 'node',
+  moduleFileExtensions: ['ts', 'js'],
+  testMatch: ['**/__tests__/**/*.test.(ts|js)'],
+  globals: {
+    'ts-jest': {
+      tsconfig: 'tsconfig.json'
+    }
   }
-  
-  module.exports = config
-  
-  
+};
+
