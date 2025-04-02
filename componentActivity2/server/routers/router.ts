@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express';
-import { supabase } from '../supabaseclient';
+import { supabase } from '../supabase';
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ router.get('/employees', async (req: Request, res: Response) => {
         const { data, error } = await supabase.from('employees').select('*');
         if (error) throw error;
 
-        const formattedData = data.map((item:any) => ({
+        const formattedData = data.map((item: { expected_date_of_defense: string; id: number; first_name: string; last_name: string; group_name: string; role: string; expected_salary: number }) => ({
             ...item,
             expected_date_of_defense: new Date(item.expected_date_of_defense),
         }));
