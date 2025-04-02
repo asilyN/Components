@@ -1,91 +1,124 @@
-import express, { Request, Response } from 'express';
-import { supabase } from '../supabase';
+import express, { type Request, type Response } from "express"
+import { supabase } from "../supabase"
 
-const router = express.Router();
+const router = express.Router()
+const TABLE_NAME = "employees"
 
+// Validation middleware
+const validateEmployeeData = (req: Request, res: Response, next: Function) => {
+  const { first_name, last_name, group_name, role, expected_salary, expected_date_of_defense } = req.body
 
-router.get('/employees', async (req: Request, res: Response) => {
-    try {
-        const { data, error } = await supabase.from('employees').select('*');
-        if (error) throw error;
+  if (!first_name || !last_name || !group_name || !role || !expected_salary || !expected_date_of_defense) {
+    res.status(400).json({ error: "Missing required fields" })
+    return
+  }
 
-        const formattedData = data.map((item: { expected_date_of_defense: string; id: number; first_name: string; last_name: string; group_name: string; role: string; expected_salary: number }) => ({
-            ...item,
-            expected_date_of_defense: new Date(item.expected_date_of_defense),
-        }));
+  // Validate date format
+  try {
+    new Date(expected_date_of_defense)
+  } catch (error) {
+    res.status(400).json({ error: "Invalid date format" })
+    return 
+  }
 
-        res.status(200).json(formattedData);
-    } catch (error) {
-        res.status(500).json({ error:(error as Error).message  });
-    }
-});
+  // Validate salary is a number
+  if (isNaN(Number(expected_salary))) {
+    res.status(400).json({ error: "Expected salary must be a number" })
+    return
+  }
 
+  next()
+}
 
-router.post("/employees", async (req: Request, res: Response) => {
-    console.log("Received Data:", req.body); // Log the incoming request body
+// Get all employees
+router.get("/employees", async (req: Request, res: Response) => {
+  try {
+    const { data, error } = await supabase.from(TABLE_NAME).select("*")
 
-    const { first_name, last_name, group_name, role, expected_salary, expected_date_of_defense } = req.body;
+    if (error) throw error
 
-    try {
-        const formattedDate = new Date(expected_date_of_defense).toISOString();
+    const formattedData = data.map((item) => ({
+      ...item,
+      expected_date_of_defense: new Date(item.expected_date_of_defense),
+    }))
 
-        const { data, error } = await supabase.from("employees").insert([
-            {
-                first_name,
-                last_name,
-                group_name,
-                role,
-                expected_salary,
-                expected_date_of_defense: formattedDate,
-            },
-        ]).select();
+    res.status(200).json(formattedData)
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message })
+  }
+})
 
-        if (error) throw error;
+// Create a new employee
+router.post("/employees", validateEmployeeData, async (req: Request, res: Response) => {
+  const { first_name, last_name, group_name, role, expected_salary, expected_date_of_defense } = req.body
 
-        res.status(201).json(data);
-    } catch (error) {
-        console.error("Error inserting data into Supabase:", error); // Log the error
-        res.status(500).json({ error: (error as Error).message });
-    }
-});
+  try {
+    const formattedDate = new Date(expected_date_of_defense).toISOString()
 
-router.put("/employees/:id", async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { first_name, last_name, group_name, role, expected_salary, expected_date_of_defense } = req.body;
+    const { data, error } = await supabase
+      .from(TABLE_NAME)
+      .insert([
+        {
+          first_name,
+          last_name,
+          group_name,
+          role,
+          expected_salary,
+          expected_date_of_defense: formattedDate,
+        },
+      ])
+      .select()
 
-    try {
-        const formattedDate = new Date(expected_date_of_defense).toISOString();
+    if (error) throw error
 
-        const { error } = await supabase
-            .from("employees")
-            .update({
-                first_name,
-                last_name,
-                group_name,
-                role,
-                expected_salary,
-                expected_date_of_defense: formattedDate,
-            })
-            .eq("id", id);
+    res.status(201).json(data)
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message })
+  }
+})
 
-        if (error) throw error;
+// Update an employee
+router.put("/employees/:id", validateEmployeeData, async (req: Request, res: Response) => {
+  const { id } = req.params
+  const { first_name, last_name, group_name, role, expected_salary, expected_date_of_defense } = req.body
 
-        res.status(200).send("Employee updated successfully");
-    } catch (error) {
-        res.status(500).json({ error: (error as Error).message });
-    }
-});
+  try {
+    const formattedDate = new Date(expected_date_of_defense).toISOString()
 
+    const { error } = await supabase
+      .from(TABLE_NAME)
+      .update({
+        first_name,
+        last_name,
+        group_name,
+        role,
+        expected_salary,
+        expected_date_of_defense: formattedDate,
+      })
+      .eq("id", id)
 
+    if (error) throw error
+
+    res.status(200).send("Employee updated successfully")
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message })
+  }
+})
+
+// Delete an employee
 router.delete("/employees/:id", async (req: Request, res: Response) => {
-    const { id } = req.params;
-    try {
-        const { error } = await supabase.from("employees").delete().eq("id", id);
-        if (error) throw error;
-        res.status(200).send("Employee deleted successfully");
-    } catch (error) {
-        res.status(500).json({ error: (error as Error).message });
-    }
-});
+  const { id } = req.params
 
-export default router;
+  try {
+    const { error } = await supabase.from(TABLE_NAME).delete().eq("id", id)
+
+    if (error) throw error
+
+    res.status(200).send("Employee deleted successfully")
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message })
+  }
+})
+
+export default router
+
