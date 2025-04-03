@@ -7,10 +7,32 @@ Currently, two official plugins are available:
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
 - [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
+## Installation
 
-## Running
-npm run for the client
-tsx index.ts for the server
+# Clone the repository
+git clone https://github.com/asilyN/Components.git
+
+# Navigate to project
+cd componentActivity2
+
+# Install dependencies (run in root, client, and server directories)
+npm install && cd client && npm install && cd ../server && npm install
+
+## RUNNING THE PROJECT
+
+# Start client (frontend)
+cd client
+npm run dev
+
+# Start server (backend) - in another terminal
+cd server
+npm run dev
+
+## RUNNING THE TEST
+cd server
+run npm test
+
+
 
 
 ## Expanding the ESLint configuration

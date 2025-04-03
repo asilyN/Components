@@ -6,9 +6,8 @@ import express, {
 import { supabase } from "../supabase";
 
 const router = express.Router();
-const TABLE_NAME = "employees";
+const TABLE_NAME = "employee";
 
-// Validation middleware
 const validateEmployeeData = (
   req: Request,
   res: Response,
@@ -38,14 +37,12 @@ const validateEmployeeData = (
     return;
   }
 
-  // Validate salary is a number
   if (expected_salary && isNaN(Number(expected_salary))) {
     console.log("Invalid salary format");
     res.status(400).json({ error: "Expected salary must be a number" });
     return;
   }
 
-  // Validate date format 
   if (expected_date_of_defense) {
     console.log("Validating date:", expected_date_of_defense);
 
@@ -54,7 +51,7 @@ const validateEmployeeData = (
       if (isNaN(date.getTime())) {
         throw new Error("Invalid date format");
       }
-    } catch (error) {
+    } catch {
       console.log("Invalid date format detected");
       res.status(400).json({ error: "Invalid date format" });
       return;
@@ -66,23 +63,23 @@ const validateEmployeeData = (
 };
 
 // Validate ID middleware
-const validateEmployeeId = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const { id } = req.params;
+// const validateEmployeeId = (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   const { id } = req.params;
 
-  if (isNaN(Number(id))) {
-    res.status(400).json({ error: "Invalid employee ID" });
-    return;
-  }
+//   const uuidRegex = /^[0-9a-fA-F-]{36}$/;
+//     if (!uuidRegex.test(id)) {
+//         res.status(400).json({ error: "Invalid employee ID" });
+//         return;
+//     }
 
-  next();
-};
+//   next();
+// };
 
-// Get all employees
-router.get("/employees", async (req: Request, res: Response) => {
+router.get("/employee", async (req: Request, res: Response) => {
   try {
     const { data, error } = await supabase.from(TABLE_NAME).select("*");
 
@@ -99,9 +96,8 @@ router.get("/employees", async (req: Request, res: Response) => {
   }
 });
 
-// Create a new employee
 router.post(
-  "/employees",
+  "/employee",
   validateEmployeeData,
   async (req: Request, res: Response) => {
     const {
@@ -114,8 +110,6 @@ router.post(
     } = req.body;
 
     try {
-      // This will throw an error if the date is invalid
-      // But it should never reach here because of the validation middleware
       const formattedDate = new Date(expected_date_of_defense).toISOString();
 
       const { data, error } = await supabase
@@ -136,18 +130,16 @@ router.post(
 
       res.status(201).json(data);
     } catch (error) {
-      console.error("Error in POST /employees:", error);
+      console.error("Error in POST /employee:", error);
       res.status(500).json({ error: (error as Error).message });
     }
   }
 );
 
-// Update an employee
+
 router.put(
-  "/employees/:id",
-  validateEmployeeId,
-  validateEmployeeData,
-  async (req: Request, res: Response) => {
+  "/employee/:id",
+  async (req, res) => {
     const { id } = req.params;
     const {
       first_name,
@@ -158,49 +150,103 @@ router.put(
       expected_date_of_defense,
     } = req.body;
 
-    try {
-      // Date validation is already done in middleware
-      const formattedDate = new Date(expected_date_of_defense).toISOString();
 
-      const { error } = await supabase
-        .from(TABLE_NAME)
+    if (!id || !/^[0-9a-fA-F-]{36}$/.test(id)) {
+      res.status(400).json({ error: "Invalid employee ID" })
+      return ;
+    }
+  
+    if (!first_name || !last_name || !group_name || !role || !expected_salary || !expected_date_of_defense) {
+      res.status(400).json({ error: "Missing required fields" })
+      return ;
+    }
+  
+    if (isNaN(expected_salary)) {
+      res.status(400).json({ error: "Expected salary must be a number" });
+      return;
+    }
+
+    if (isNaN(Date.parse(expected_date_of_defense))) {
+      res.status(400).json({ error: "Invalid date format" });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("employee")
         .update({
           first_name,
           last_name,
           group_name,
           role,
           expected_salary,
-          expected_date_of_defense: formattedDate,
+          expected_date_of_defense,
         })
-        .eq("id", id);
+        .eq("id", id)
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating employee:", error);
+        res.status(500).json({ error: "Failed to update employee" });
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        res.status(404).json({ error: "Employee not found" });
+        return;
+      }
 
       res.status(200).send("Employee updated successfully");
     } catch (error) {
-      console.error("Error in PUT /employees/:id:", error);
+      console.error("Error in PUT /employee/:id:", error);
       res.status(500).json({ error: (error as Error).message });
     }
   }
 );
 
-// Delete an employee
-router.delete(
-  "/employees/:id",
-  validateEmployeeId,
-  async (req: Request, res: Response) => {
-    const { id } = req.params;
 
-    try {
-      const { error } = await supabase.from(TABLE_NAME).delete().eq("id", id);
+router.delete("/employee/:id", async (req, res) => {
+  const { id } = req.params;
 
-      if (error) throw error;
+  if (!id || !/^[0-9a-fA-F-]{36}$/.test(id)) {
+      res.status(400).json({ error: "Invalid employee ID" })
+      return ;
+  }
+
+  try {
+      const { data: existingEmployee, error: fetchError } = await supabase
+          .from("employee")
+          .select("*")
+          .eq("id", id);
+
+      if (fetchError) {
+          console.error("Error fetching employee:", fetchError);
+          res.status(500).json({ error: "Failed to fetch employee" })
+          return ;
+      }
+
+      if (!existingEmployee || existingEmployee.length === 0) {
+          res.status(404).json({ error: "Employee not found" })
+          return ;
+      }
+
+      const { error: deleteError } = await supabase
+          .from("employee")
+          .delete()
+          .eq("id", id);
+
+      if (deleteError) {
+          console.error("Error deleting employee:", deleteError);
+          res.status(500).json({ error: "Failed to delete employee" })
+          return ;
+      }
 
       res.status(200).send("Employee deleted successfully");
-    } catch (error) {
+  } catch (error) {
+      console.error("Error in DELETE /employee/:id:", error);
       res.status(500).json({ error: (error as Error).message });
-    }
   }
-);
+});
+
 
 export default router;

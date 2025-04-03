@@ -31,7 +31,7 @@ const CrudComponent = () => {
   const fetchData = async () => {
     try {
       const result = await axios.get<Employee[]>(
-        "http://localhost:3000/api/employees"
+        "http://localhost:3000/api/employee"
       );
 
       const employeesWithDates: Employee[] = result.data.map((item: Employee) => ({
@@ -71,11 +71,11 @@ const CrudComponent = () => {
 
       if (isEdit !== null) {
         await axios.put(
-          `http://localhost:3000/api/employees/${isEdit}`,
+          `http://localhost:3000/api/employee/${isEdit}`,
           payload
         );
       } else {
-        await axios.post("http://localhost:3000/api/employees", payload);
+        await axios.post("http://localhost:3000/api/employee", payload);
       }
 
       setFormData({
@@ -102,7 +102,7 @@ const CrudComponent = () => {
 
   const handleDelete = async (id: string) => {
     try {
-      await axios.delete(`http://localhost:3000/api/employees/${id}`);
+      await axios.delete(`http://localhost:3000/api/employee/${id}`);
       fetchData();
     } catch (error) {
       console.log(error);
